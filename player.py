@@ -1,57 +1,41 @@
 from ursina import *
-from settings import Settings
+from body_part import BodyPart
+from weapon import Sword
 
 class Player(Entity):
     def __init__(self):
         super().__init__(
-            model='cube',
-            texture='white_cube',
+            model='assets/player',
             scale=(1, 2, 1),
-            collider='box',
             position=(0, 2, 0)
         )
-        self.camera_pivot = Entity(parent=self)
-        self.speed = Settings.MOVE_SPEED
-        self.mouse_sensitivity = Settings.MOUSE_SENSITIVITY
         
-        camera.parent = self.camera_pivot
-        camera.position = (0, Settings.CAMERA_HEIGHT, -Settings.CAMERA_DISTANCE)
-        camera.rotation = (0, 0, 0)
-        camera.fov = 90
+        # Инициализация частей тела
+        self.body_parts = {
+            'head': BodyPart(self, 'Голова', 'sphere', (0.8, 0.8, 0.8), (0, 1.5, 0), (0, 0, 0), health=50),
+            'torso': BodyPart(self, 'Туловище', 'cube', (1, 2, 0.5), (0, 0.5, 0), (0, 0, 0)),
+            'left_arm': BodyPart(self, 'Левая рука', 'cube', (0.4, 1.2, 0.4), (-0.7, 0.6, 0), (0, 0, -10)),
+            'right_arm': BodyPart(self, 'Правая рука', 'cube', (0.4, 1.2, 0.4), (0.7, 0.6, 0), (0, 0, 10)),
+            'legs': BodyPart(self, 'Ноги', 'cube', (0.8, 1.5, 0.6), (0, -1, 0), (0, 0, 0))
+        }
         
-        mouse.locked = True
-        self.mouse_traverse = False  # Для отладки
-
-    def update(self):
-        self.movement()
-        self.camera_rotation()
+        # Инициализация оружия
+        self.sword = Sword(self.body_parts['right_arm'])
+        self.sword.enabled = False  # Скрываем пока не нужно
         
-        # Отслеживание позиции для отладки
-        if self.mouse_traverse:
-            print(f"Player rotation: {self.rotation_y}")
-            print(f"Camera pivot rotation: {self.camera_pivot.rotation_x}")
-
-    def movement(self):
-        move_dir = Vec3(
-            held_keys['d'] - held_keys['a'],
-            0,
-            held_keys['w'] - held_keys['s']
-        ).normalized()
+        # Настройки управления
+        self.attack_key = 'left mouse down'
         
-        self.position += self.forward * move_dir.z * self.speed * time.dt
-        self.position += self.right * move_dir.x * self.speed * time.dt
-
-    def camera_rotation(self):
-        if mouse.locked:
-            # Вращение персонажа по горизонтали
-            self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity * 100
-            
-            # Наклон камеры по вертикали
-            self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity * 100
-            self.camera_pivot.rotation_x = clamp(self.camera_pivot.rotation_x, -60, 60)
-
     def input(self, key):
-        if key == 'escape':
-            mouse.locked = not mouse.locked
-        if key == 't':  # Клавиша для отладки
-            self.mouse_traverse = not self.mouse_traverse
+        if key == self.attack_key:
+            self.attack()
+            
+    def attack(self):
+        self.sword.attack()
+        
+    def update(self):
+        # Проверка попаданий по частям тела
+        if self.sword.is_attacking:
+            for entity in self.sword.intersects().entities:
+                if isinstance(entity, BodyPart) and entity != self.body_parts:
+                    entity.take_damage(self.sword.damage)
