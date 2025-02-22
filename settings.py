@@ -1,6 +1,6 @@
 class Settings:
-    MOVE_SPEED = 5
-    MOUSE_SENSITIVITY = 1
-    CAMERA_DISTANCE = 8
-    CAMERA_HEIGHT = 2
-    GROUND_SIZE = 20
+    # ... предыдущие настройки
+    CAMERA_DISTANCE = 4  # Базовое расстояние
+    CAMERA_HEIGHT = 2    # Высота камеры
+    MIN_CAMERA_DIST = 2  # Минимальное расстояние
+    MAX_CAMERA_DIST = 8  # Максимальное расстояние
