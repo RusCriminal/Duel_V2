@@ -5,10 +5,10 @@ class Sword(Entity):
         super().__init__(
             parent=parent,
             model='cube',
-            texture='sword_texture',
+            color=color.gray,
             scale=(0.3, 0.3, 1.5),
-            rotation=(0, 0, 45),
-            position=(0.5, -0.5, 0.5),
+            position=(0.7, 0.5, 0),  # Новая позиция
+            rotation=(35, -10, 45),
             collider='box'
         )
         self.attack_cooldown = 0.5
@@ -20,11 +20,12 @@ class Sword(Entity):
         if time.time() > self.last_attack + self.attack_cooldown:
             self.is_attacking = True
             self.last_attack = time.time()
-            self.animate_attack()
+            self.start_attack_animation()
 
-    def animate_attack(self):
-        self.animate_rotation((0, 0, -45), duration=0.1)
-        self.animate_rotation((0, 0, 45), duration=0.3, delay=0.1)
-        
+    def start_attack_animation(self):
+        self.animate_position(self.position + Vec3(0,0,1), duration=0.2)
+        self.animate_rotation((35, -10, -45), duration=0.2)
+        self.animate_rotation((35, -10, 45), duration=0.3, delay=0.2)
+
     def update(self):
-        self.is_attacking = time.time() < self.last_attack + 0.2
+        self.is_attacking = time.time() < self.last_attack + 0.3
